@@ -128,12 +128,15 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="DoubleHashTable.cpp" />
+    <ClCompile Include="ExternalChainingHashTable.cpp" />
     <ClCompile Include="LinearProbingHashTable.cpp" />
     <ClCompile Include="main.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="DoubleHashTable.h" />
+    <ClInclude Include="ExternalChainingHashTable.h" />
     <ClInclude Include="HashTable.h" />
+    <ClInclude Include="Node.h" />
     <ClInclude Include="LinearProbingHashTable.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />

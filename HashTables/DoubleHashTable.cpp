@@ -1,8 +1,16 @@
 #include "DoubleHashTable.h"
 #include <iostream>
 
-DoubleHashTable::DoubleHashTable() {
+DoubleHashTable::DoubleHashTable(int arrSize) {
 	values = new int[arrSize];
+	
+	this->arrSize = arrSize;
+
+	for (int i = 0; i < this->arrSize; i++) {
+		values[i] = -1;
+	}
+
+	this->size = 0;
 }
 
 DoubleHashTable::~DoubleHashTable() {
@@ -11,46 +19,54 @@ DoubleHashTable::~DoubleHashTable() {
 
 // Хэшируем и проверяем наличие элемента в массиве. Если коллизия, то используем двойное хэшировние
 void DoubleHashTable::insert(int value) {
-	int firstHash = hash(value);
-	int secondHash = hash(value);
+	if (size == arrSize)
+		throw std::runtime_error("table is full");
 
-	for (int i = 0; i < arrSize - 1; i++) {
-		if (values[firstHash] == 0) {
-			values[firstHash] = value;
-			break;
+	int index = hash(value);
+	int step = secondHash(value);
+	
+	if (values[index] != -1) {
+		probeCount++;
+		while (values[index] != -1) {
+			index = (index + step) % arrSize;
 		}
-		firstHash = (firstHash + secondHash) % arrSize;
 	}
+	values[index] = value;
+	size++;
+}
+
+int DoubleHashTable::getProbeCount() {
+	return this->probeCount;
 }
 
 void DoubleHashTable::remove(int value) {
-	int firstHash = hash(value);
-	int secondHash = this->secondHash(value);
+	int index = find(value);
 
-	for (int i = 0; i < arrSize - 1; i++) {
-		if (values[firstHash] != 0) {
-			if (values[firstHash] == value) {
-				values[firstHash] = 0;
-			}
-		}
-		// Next try
-		firstHash = (firstHash + secondHash) % arrSize;
+	if (index == -1) {
+		throw std::invalid_argument("Invalid value to remove");
 	}
+
+	values[index] = -1;
+	size--;
 }
 
 int DoubleHashTable::find(int value) {
-	int firstHash = hash(value);
-	int secondHash = this->secondHash(value);
+	int index = hash(value);
+	int step = secondHash(value);
+	
+	this->probeCount++;
 
-	for (int i = 0; i < arrSize - 1; i++) {
-		if (values[firstHash] != 0) {
-			if (values[firstHash] == value) {
-				return firstHash;
-			}
-		}
-		// Next try
-		firstHash = (firstHash + secondHash) % arrSize;
+	// Ищем элемент с использование двойного хэширования
+	while (values[index] != value && values[index] != -1) {
+		index = (index + step) % arrSize;
+		this->probeCount++;
 	}
+	
+	// Не нашли элемент
+	if (values[index] == -1)
+		return -1;
+
+	return index;
 }
 
 
@@ -59,9 +75,36 @@ int DoubleHashTable::hash(int value) {
 }
 
 int DoubleHashTable::secondHash(int value) {
-	return 1 + value % arrSize - 2;
+	return 7 - (value % 7);
 }
 
 int DoubleHashTable::get(int key) {
 	return values[key];
+}
+
+int DoubleHashTable::getSize() {
+	return this->size;
+}
+
+std::string DoubleHashTable::toString() {
+	std::string string = "";
+
+	for (int i = 0; i < arrSize; i++) {
+		if (values[i] != -1) {
+			string += std::to_string(values[i]) + " ";
+		}
+		else {
+			string += "- ";
+		}
+	}
+
+	return string;
+}
+
+void DoubleHashTable::clear() {
+	for (int i = 0; i < arrSize; i++) {
+		values[i] = -1;
+	}
+	size = 0;
+	probeCount = 0;
 }
