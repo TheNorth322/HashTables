@@ -1,23 +1,22 @@
 #pragma once
-#include "HashTable.h"
 #include "Node.h"
 #include <vector>
+#include <string>
 
-class ExternalChainingHashTable : public HashTable {
+class ExternalChainingHashTable {
 public:
 	ExternalChainingHashTable(int tableSize);
 	~ExternalChainingHashTable();
 
 	void insert(int key, int value);
-	int get(int key) override;
-	void remove(int key) override;
-	int getProbeCount() override;
+	int get(int key);
+	void remove(int key);
+	int getSize();
+	std::string toString();
 
-	std::string toString() override;
 private:
 	std::vector<Node*> lists;
 	int size;
-	int probeCount;
 
 	int hash(int value);
 };

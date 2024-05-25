@@ -1,7 +1,10 @@
 #include "ExternalChainingHashTable.h"
 #include <iostream>
+#include <string>
+#include <vector>
 
 ExternalChainingHashTable::ExternalChainingHashTable(int tableSize) {
+    lists = std::vector<Node*>();
     lists.resize(tableSize, nullptr);
     size = 0;
 }
@@ -77,7 +80,6 @@ int ExternalChainingHashTable::hash(int key) {
     return key % lists.size();
 }
 
-int ExternalChainingHashTable::getProbeCount() {
-    return this->probeCount;
+int ExternalChainingHashTable::getSize() {
+    return this->size;
 }
-

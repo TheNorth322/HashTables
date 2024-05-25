@@ -1,6 +1,7 @@
 ﻿#include <iostream>
 #include "DoubleHashTable.h"
 #include "LinearProbingHashTable.h"
+#include "ExternalChainingHashTable.h"
 #include <vector>
 #include <unordered_set>
 #include <chrono>
@@ -110,11 +111,15 @@ std::vector<int> getDataSet(int size) {
 	
 	return numbers;
 }
-void fillTable(HashTable& table, const std::vector<int>& dataSet, int percentage) {
-	int elementsToInsert = dataSet.size() * percentage / 100;
-	table.clear();
-	for (int i = 0; i < elementsToInsert; i++) {
+void fillTable(HashTable& table, const std::vector<int>& dataSet, int leftBorder, int rightBorder) {
+	for (int i = leftBorder; i < rightBorder; i++) {
 		table.insert(dataSet[i]);
+	}
+}
+
+void fillTable(ExternalChainingHashTable& table, const std::vector<int>& dataSet, int leftBorder, int rightBorder) {
+	for (int i = leftBorder; i < rightBorder; i++) {
+		table.insert(dataSet[i], dataSet[i]);
 	}
 }
 // Функция для проведения серии успешных поисков
@@ -124,14 +129,17 @@ void successfulSearchExperiment(HashTable& table, const std::vector<int>& dataSe
 
 	for (int i = 1; i <= 9; ++i) {
 		int successfulSearchCount = 0;
-		fillTable(table, dataSet, i * 10);
+		int leftBorder = dataSet.size() * (i - 1) / 10;
+		int rightBorder = dataSet.size() * i / 10;
+
+		fillTable(table, dataSet, leftBorder, rightBorder);
 
 		auto start = std::chrono::steady_clock::now();
 		for (int j = 0; j < table.getSize(); ++j) {
 			table.find(dataSet[j]);
 			successfulSearchCount++;
 		}
-
+		
 		auto end = std::chrono::steady_clock::now();
 		std::chrono::duration<double> elapsedSeconds = end - start;
 		
@@ -151,7 +159,10 @@ void unsuccessfulSearchExperiment(HashTable& table, const std::vector<int>& data
 
 	for (int i = 1; i <= 9; ++i) {
 		int successfulSearchCount = 0;
-		fillTable(table, dataSet, i * 10);
+		int leftBorder = dataSet.size() * (i - 1) / 10;
+		int rightBorder = dataSet.size() * i / 10;
+
+		fillTable(table, dataSet, leftBorder, rightBorder);
 
 		auto start = std::chrono::steady_clock::now();
 		for (int j = 0; j < table.getSize(); ++j) {
@@ -172,6 +183,62 @@ void unsuccessfulSearchExperiment(HashTable& table, const std::vector<int>& data
 
 }
 
+// Function to perform a series of successful searches
+void successfulSearchExperiment(ExternalChainingHashTable& table, const std::vector<int>& dataSet) {
+	std::cout << "Successful search experiment:" << std::endl;
+
+	for (int i = 1; i <= 9; ++i) {
+		int leftBorder = dataSet.size() * (i - 1) / 10;
+		int rightBorder = dataSet.size() * i / 10;
+
+		fillTable(table, dataSet, leftBorder, rightBorder);
+		int successfulSearchCount = table.getSize();
+
+		auto start = std::chrono::steady_clock::now();
+		for (int j = 0; j < successfulSearchCount; ++j) {
+			try {
+				table.get(dataSet[j]);
+			}
+			catch (const std::invalid_argument& e) {
+				std::cerr << "Error: Key not found during successful search experiment. " << dataSet[j] << std::endl;
+			}
+		}
+		auto end = std::chrono::steady_clock::now();
+		std::chrono::duration<double> elapsedSeconds = end - start;
+
+		std::cout << "Search for " << i * 10 << "% table. Time elapsed: "
+			<< elapsedSeconds.count() << " seconds." << std::endl;
+	}
+}
+
+// Function to perform a series of unsuccessful searches
+void unsuccessfulSearchExperiment(ExternalChainingHashTable& table, const std::vector<int>& dataSet) {
+	std::cout << "Unsuccessful search experiment:" << std::endl;
+
+	for (int i = 1; i <= 9; ++i) {
+		int leftBorder = dataSet.size() * (i - 1) / 10;
+		int rightBorder = dataSet.size() * i / 10;
+
+		fillTable(table, dataSet, leftBorder, rightBorder);
+		int unsuccessfulSearchCount = table.getSize();
+
+		auto start = std::chrono::steady_clock::now();
+		for (int j = 0; j < unsuccessfulSearchCount; ++j) {
+			try {
+				table.get(1000001); // A key that is guaranteed to be not in the table
+			}
+			catch (const std::invalid_argument& e) {
+				// Expected exception for unsuccessful search
+			}
+		}
+		auto end = std::chrono::steady_clock::now();
+		std::chrono::duration<double> elapsedSeconds = end - start;
+
+		std::cout << "Search for " << i * 10 << "% table. Time elapsed: "
+			<< elapsedSeconds.count() << " seconds." << std::endl;
+	}
+}
+
 int main() {
 	srand(time(NULL));
 
@@ -179,9 +246,12 @@ int main() {
 
 	LinearProbingHashTable linearProbingHashTable = LinearProbingHashTable(size);
 	DoubleHashTable doubleHashTable = DoubleHashTable(size);
+	ExternalChainingHashTable externalHashTable = ExternalChainingHashTable(size);
 	std::vector<int> dataSet = getDataSet(size);
 
-	successfulSearchExperiment(doubleHashTable, dataSet);
+	successfulSearchExperiment(linearProbingHashTable, dataSet);
+	linearProbingHashTable.clear();
+	unsuccessfulSearchExperiment(linearProbingHashTable, dataSet);
 
 	return 0;
 }
